@@ -6,7 +6,7 @@ draw_mask=1; % whether to draw a phase-scrambled post-mask
 % Screen size & color info
 background=[128,128,128];
 fix_size=10; % size of fixation cross (in pix)
-fullScreen=1;
+fullScreen=1; % if 0, use partialRect:
 %partialRect = [0 0 1024 1024];
 
 %text_color = [0 0 0]; % black

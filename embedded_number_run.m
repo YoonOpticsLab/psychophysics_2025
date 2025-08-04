@@ -131,10 +131,10 @@ try
             resp=cc;
         end
 
-        correct=(resp==char(rand_num))*1;
+        correct=(resp==char(rand_num))*1.0;
 
         %results(ntrial,:)=[ntrial,randstr,text_size,correct,char(rand_num),resp,rt];
-        results(ntrial,:)=[ntrial,0,which_size,correct,char(rand_num),resp,rt];
+        results(ntrial,:)=[ntrial,0.0,which_size,correct,char(rand_num),resp,rt*1000];
         results(ntrial,:)
     end
 
