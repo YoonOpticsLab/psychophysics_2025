@@ -94,15 +94,20 @@ try
         end
     
         Screen('TextSize', expWin, which_size);
-        for flip_count=1:duration_flips
-            %Screen('DrawText', expWin, randstr, cx, cy, text_color);
-            DrawFormattedText(expWin,randstr,'center','center',text_color);
+% Now horizontally and vertically centered:
+        [nx, ny, bbox] = DrawFormattedText(expWin, randstr, 'center', 'center', background);
+
+        % First one will be from DrawFT
+        for flip_count=2:duration_flips
             Screen('Flip', expWin);
+            Screen('DrawText', expWin, randstr, bbox(1), bbox(2), text_color);
+            %DrawFormattedText(expWin,randstr,'center','center',text_color);
         end
         
         if draw_mask            
             for flip_count=1:duration_flips 
-                DrawFormattedText(expWin,masktext,'center','center',text_color);
+                Screen('DrawText', expWin, masktext, bbox(1), bbox(2), text_color);
+                %DrawFormattedText(expWin,masktext,'center','center',text_color);
                 Screen('Flip', expWin);
             end
         end

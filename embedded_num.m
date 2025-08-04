@@ -1,6 +1,6 @@
 output_name='num_test';
 
-stimulus_duration = 0.150 ; % In seconds
+stimulus_duration = 0.100 ; % In seconds
 draw_mask=1; % whether to draw a phase-scrambled post-mask
 
 % Screen size & color info
@@ -10,9 +10,9 @@ fullScreen=1;
 %partialRect = [0 0 1024 1024];
 
 %text_color = [0 0 0]; % black
-text_color = [64 64 64]; % 50 gray (TODO: gamma)
+text_color = [90 90 90]; % 50 gray (TODO: gamma)
 
-text_sizes = [10,20,100]; % Size in pixels: TODO: arcmin
+text_sizes = [10,20,40,80]; % Size in pixels: TODO: arcmin
 num_repeats=4;
 
 % Random string params:
