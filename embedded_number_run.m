@@ -1,49 +1,9 @@
-trial_order=repmat( sigmas, [1, num_repeats]);
+trial_order=repmat( text_sizes, [1, num_repeats]);
 num_trials = size(trial_order,2);
 trial_order=trial_order( randperm(num_trials) );
 
-targets = dir(targets_dir);
-targets = targets(3:end); % DRC: On linux, need to skip first two (. and ..)
-
-% Read first one to init mask buffer etc. TODO: don't need. Can use imsize
-% since they are all rescaled.
-target1=targets(1);
-fullname = [target1.folder '/' target1.name];
-num_images = size(targets,1);
-image_order = repmat( 1:num_images, [1 ceil(num_trials/num_images)]);
-image_order = image_order(1:num_trials);
-image_order=image_order( randperm(num_trials) );
-
-img1=imread(fullname);  
-img1=imresize(img1,imsize);
-img1 = im2double(rgb2gray(img1)); % Convert to grayscale and double % Make b&w
-
-siz=size(img1,1)/4;
-midpoint_pixels = siz*midpoint;
-[XX,YY]=meshgrid(-siz:siz-1,-siz:siz-1);
-RR=sqrt((XX).^2+(YY).^2);
-mask = 1 ./ (1+exp(-k*(midpoint_pixels-RR )) );
-
-masks={};
-quad_mask = mask.*0;
-masks{1} = [mask,quad_mask;quad_mask,quad_mask];
-masks{2} = [quad_mask,mask;quad_mask,quad_mask];
-masks{3} = [quad_mask,quad_mask;mask,quad_mask];
-masks{4} = [quad_mask,quad_mask;quad_mask,mask];
-
-if debug_visualize_mask
-    figure();
-    subplot(1,2,1);
-    m1=masks{1};
-    plot(-siz*2:siz*2-1, m1(siz/2,:));
-    grid();
-    subplot(1,2,2);
-    imagesc(m1);
-end
-
-
 %Prepare output
-colHeaders = {'trial_num', 'str','font_size','correct','target_num','resp','rt'};
+colHeaders = {'trial_num', 'string','size','correct','number','resp','rt'};
 results=NaN * ones(length(trial_order),length(colHeaders)); %preallocate results matrix
 
 try
@@ -91,77 +51,64 @@ try
     %this will make the full screen white (=default)
     %[expWin,rect]=Screen('OpenWindow',screenNumber,128);
 
-    %get the midpoint (mx, my) of this window, x and y
     [mx, my] = RectCenter(rect);
 
     %get rid of the mouse cursor, we don't have anything to click at anyway
     HideCursor;
 
-    % Preparing and displaying the welcome screen
-    % We choose a text size of 24 pixels - Well readable on most screens:
-    Screen('TextSize', expWin, 48);
-
     for ntrial=1:num_trials
+        which_size = trial_order(ntrial);
         randstr_len1 = randi(randstr_lengths);
-        mask_entire = masks{which_quad};
-        blur_val = trial_order(ntrial);
-        which_image = image_order(ntrial);
+        randstr=[];
+        for n=1:randstr_len1
+            if use_uppercase
+                random_ascii_value = randi([65, 65+26-1]);
+            else
+                random_ascii_value = randi([97, 97+26-1]);
+            end
+            randstr=[randstr char(random_ascii_value)];
+        end
+        if skip_outermost
+            randloc=randi([2 randstr_len1-1]);
+        else
+            randloc=randi([1 randstr_len1]);
+        end
+        % NO ZEROS
+        rand_num=randi([49 49+9-1]);
+        randstr(randloc)=char(rand_num);
 
-        target1=targets(which_image);
-        fullname = [target1.folder '/' target1.name];
-        img1=imread(fullname);  
-        img1=imresize(img1,imsize);
-        img1 = im2double(rgb2gray(img1)); % Convert to grayscale and double % Make b&w
-
-        blurred = imgaussfilt(img1,blur_val);
-
-        summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
-
-        Screen('drawline',expWin,[0 0 0],mx-10,my,mx+10,my,2);%mx-10,my,mx+10,my
-        Screen('drawline',expWin,[0 0 0],mx,my-10,mx,my+10,2);%mx,my-10,mx,my+10
+        Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
+        Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
     
         % Draw 'myText', centered in the display window:
         %DrawFormattedText(expWin, 'Press a key to start', mx, my+50);
         Screen('Flip', expWin);
         KbWait([], 2); %wait for keystroke
     
-        imageTexture = Screen('MakeTexture', expWin, summed*255);
         if draw_mask
-            img_fft = fft2(summed);
-            magnitude = abs(img_fft);
-            phase = angle(img_fft);
-            
-            random_phase = -pi + (pi+pi)*rand(size(phase)); % Random phase between -pi and pi
-            scrambled_fft = magnitude .* exp(1i * random_phase);
-            phase_scrambled_img = ifft2(scrambled_fft);
-            phase_scrambled_img = real(phase_scrambled_img);
-            
-            % Scale to range [0,1]
-            phase_scrambled_img = phase_scrambled_img - min(min(phase_scrambled_img));
-            phase_scrambled_img = phase_scrambled_img / max(max(phase_scrambled_img));
-
-            % Match max of input image:
-            phase_scrambled_img = phase_scrambled_img * max(max(summed));
-            maskTexture = Screen('MakeTexture', expWin, phase_scrambled_img*255);
+            if use_uppercase
+                masktext=repmat('X',[1 randstr_len1] );
+            else
+                masktext=repmat('x',[1 randstr_len1] );
+            end
         end
     
+        Screen('TextSize', expWin, which_size);
         for flip_count=1:duration_flips
-            Screen('DrawTexture', expWin, imageTexture);
+            %Screen('DrawText', expWin, randstr, cx, cy, text_color);
+            DrawFormattedText(expWin,randstr,'center','center',text_color);
             Screen('Flip', expWin);
         end
         
-        if draw_mask
-            
+        if draw_mask            
             for flip_count=1:duration_flips 
-                Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);%mx-10,my,mx+10,my
-                Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);%mx,my-10,mx,my+10
-                Screen('DrawTexture', expWin, maskTexture );
+                DrawFormattedText(expWin,masktext,'center','center',text_color);
                 Screen('Flip', expWin);
             end
         end
     
-        Screen('drawline',expWin,[0 0 0],mx-10,my,mx+10,my,2);%mx-10,my,mx+10,my
-        Screen('drawline',expWin,[0 0 0],mx,my-10,mx,my+10,2);%mx,my-10,mx,my+10
+        Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
+        Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
         
         Screen('Flip', expWin);
 
@@ -172,22 +119,17 @@ try
         %find out which key was pressed
         cc=KbName(keyCode);  %translate code into letter (string)
 
-        resp_quad=0;
+        resp=0;
         if isempty(cc) || strcmp(cc,'ESCAPE')
             break;   %break out of trials loop, but perform all the cleanup things
-        elseif strcmp(cc,'7') || strcmp(cc,'q')
-            resp_quad = 1;
-        elseif strcmp(cc,'9') || strcmp(cc,'e')
-            resp_quad = 2;
-        elseif strcmp(cc,'1') || strcmp(cc,'z')
-            resp_quad = 3;
-        elseif strcmp(cc,'3') || strcmp(cc,'c')
-            resp_quad = 4;
+        else
+            resp=cc;
         end
 
-        correct=(resp_quad==which_quad);
+        correct=(resp==char(rand_num))*1;
 
-        results(ntrial,:)=[ntrial,which_image,blur_val,correct,which_quad,resp_quad,rt];
+        %results(ntrial,:)=[ntrial,randstr,text_size,correct,char(rand_num),resp,rt];
+        results(ntrial,:)=[ntrial,0,which_size,correct,char(rand_num),resp,rt];
         results(ntrial,:)
     end
 
@@ -208,14 +150,14 @@ try
     %return to olddebuglevel
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);
 
-    averages = zeros( [1 size(sigmas,2)]);
+    averages = zeros( [1 size(text_sizes,2)]);
     for n=1:size(averages,2)
         % Sum the correct column of the results for each level
-        averages(n) = mean( results( results(:,3)==sigmas(n), 4) );
+        averages(n) = mean( results( results(:,3)==text_sizes(n), 4) );
     end
 
     figure();
-    plot( sigmas, averages, 'o-');
+    plot( text_sizes, averages, 'o-');
 
 catch
     % This section is executed only in case an error happens in the

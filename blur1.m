@@ -9,7 +9,7 @@ fix_size=10; % size of fixation cross (in pix)
 fullScreen=0;
 partialRect = [0 0 1024 1024];
 
-% Sigma blur levels (in pixels) of the Gaussian blur 
+% Sigma blur levels (in pixels) of the Gaussian blur (imgaussfilt)
 % TODO: convert to visual angle based on distance, etc.
 sigmas=[1, 2, 4, 8];
 num_repeats=4;
