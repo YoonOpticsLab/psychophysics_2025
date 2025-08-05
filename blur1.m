@@ -1,14 +1,32 @@
+close('all'); clear('all');
+
 output_name='test';
 
-distance_cm=
-monitor_horiz_size_cm=
-monitor_horiz_res_pixels=
-arcmin_per_pixel = 
+%blur_levels_multiplier=[10^-0.1,10^0.1];
+blur_levels_multiplier=[1.25,1.5,2.0];
+blur_baseline_D=0.25;
+num_repeats=4;
 
-defocus=X;
+pupil_mm=6; % For D->Z_um,Z calculation
+pupil_real_mm=6;
+psf_pixels=128;
+visualize_psf=0; % For debugging
 
-stimulus_duration = 0.250 ; % In seconds
-draw_mask=1; % whether to draw a phase-scrambled post-mask
+% Monitor & setup information
+distance_cm=300;
+monitor_horiz_size_cm=61.47; % 27" LG LCD (27GL83A)
+monitor_horiz_num_pixels=2560;
+gamma_exponent=2.2;
+
+% Screen size & color info
+background=[255,255,255];
+fix_size=10; % size of fixation cross (in pix)
+fullScreen=0; % if 0, use partialRect:
+partialRect = [0 0 1024 1024];
+
+% Stimulus
+stimulus_duration = -0.50 ; % In seconds
+stimulus_size_deg = 0.5;
 
 % Screen size and background
 background=[128,128,128];
@@ -16,20 +34,13 @@ fix_size=10; % size of fixation cross (in pix)
 fullScreen=0;
 partialRect = [0 0 1024 1024];
 
-% Sigma blur levels (in pixels) of the Gaussian blur (imgaussfilt)
-% TODO: convert to visual angle based on distance, etc.
-sigmas=[1, 2, 4, 8];
-num_repeats=4;
-
-% Quadrant mask based on logistic function
-midpoint=0.75; % 50% point, in proportion of entire ROI (quadrant)
-k=0.3;  % "steepness" of logistic mask: higher is steeper
-debug_visualize_mask=1; % to show a window displaying mask
-
 % Directory to randomly pull images from. All images are resized to the
 % size given. (May distort if not square.)
-targets_dir='face_images/';
+targets_dir='face_images';
+filename_mask='*.jpg';
 imsize=[256,256];
+
+show_pf=1;
 
 % RUN
 which_experiment='blur1';

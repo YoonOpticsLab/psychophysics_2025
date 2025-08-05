@@ -1,9 +1,9 @@
-trial_order=repmat( sigmas, [1, num_repeats]);
+trial_order=repmat( blur_levels_multiplier, [1, num_repeats]);
 num_trials = size(trial_order,2);
 trial_order=trial_order( randperm(num_trials) );
 
-targets = dir(targets_dir);
-targets = targets(3:end); % DRC: On linux, need to skip first two (. and ..)
+targets = dir(sprintf('%s/%s',targets_dir,filename_mask));
+targets = targets;
 
 % Read first one to init mask buffer etc. TODO: don't need. Can use imsize
 % since they are all rescaled.
@@ -19,28 +19,6 @@ img1=imresize(img1,imsize);
 img1 = im2double(rgb2gray(img1)); % Convert to grayscale and double % Make b&w
 
 siz=size(img1,1)/4;
-midpoint_pixels = siz*midpoint;
-[XX,YY]=meshgrid(-siz:siz-1,-siz:siz-1);
-RR=sqrt((XX).^2+(YY).^2);
-mask = 1 ./ (1+exp(-k*(midpoint_pixels-RR )) );
-
-masks={};
-quad_mask = mask.*0;
-masks{1} = [mask,quad_mask;quad_mask,quad_mask];
-masks{2} = [quad_mask,mask;quad_mask,quad_mask];
-masks{3} = [quad_mask,quad_mask;mask,quad_mask];
-masks{4} = [quad_mask,quad_mask;quad_mask,mask];
-
-if debug_visualize_mask
-    figure();
-    subplot(1,2,1);
-    m1=masks{1};
-    plot(-siz*2:siz*2-1, m1(siz/2,:));
-    grid();
-    subplot(1,2,2);
-    imagesc(m1);
-end
-
 
 %Prepare output
 colHeaders = {'trial_num', 'file','blur_sigma','correct','target_quad','resp','rt'};
@@ -103,19 +81,34 @@ try
 
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
-        mask_entire = masks{which_quad};
-        blur_val = trial_order(ntrial);
+        blur_multiplier = trial_order(ntrial);
         which_image = image_order(ntrial);
 
         target1=targets(which_image);
         fullname = [target1.folder '/' target1.name];
         img1=imread(fullname);  
         img1=imresize(img1,imsize);
+
         img1 = im2double(rgb2gray(img1)); % Convert to grayscale and double % Make b&w
+        img1 = img1 - min(min(img1));
+        img1 = img1 / max(max(img1));
 
-        blurred = imgaussfilt(img1,blur_val);
+        Z_blur_um = blur_multiplier*blur_baseline_D / 2 / sqrt(6) * (pupil_mm/2)^2
+        psf=defocus_psf(psf_pixels,Z_blur_um,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        blurred = conv2(img1,psf,'same');
+        blurred = blurred - min(min(blurred));
+        blurred = blurred / max(max(blurred));
+        blurred = blurred .^ (1/gamma_exponent);
 
-        summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
+        % Baseline
+        Z_blur_um_b = blur_baseline_D / 2 / sqrt(6) * (pupil_mm/2)^2
+        psf_b=defocus_psf(psf_pixels,Z_blur_um_b,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        blurred_b = conv2(img1,psf_b,'same');
+        blurred_b = blurred_b - min(min(blurred_b));
+        blurred_b = blurred_b / max(max(blurred_b));
+        blurred_b = blurred_b .^ (1/gamma_exponent);
+
+        %summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
@@ -125,41 +118,49 @@ try
         Screen('Flip', expWin);
         KbWait([], 2); %wait for keystroke
     
-        imageTexture = Screen('MakeTexture', expWin, summed*255);
-        if draw_mask
-            img_fft = fft2(summed);
-            magnitude = abs(img_fft);
-            phase = angle(img_fft);
-            
-            random_phase = -pi + (pi+pi)*rand(size(phase)); % Random phase between -pi and pi
-            scrambled_fft = magnitude .* exp(1i * random_phase);
-            phase_scrambled_img = ifft2(scrambled_fft);
-            phase_scrambled_img = real(phase_scrambled_img);
-            
-            % Scale to range [0,1]
-            phase_scrambled_img = phase_scrambled_img - min(min(phase_scrambled_img));
-            phase_scrambled_img = phase_scrambled_img / max(max(phase_scrambled_img));
-
-            % Match max of input image:
-            phase_scrambled_img = phase_scrambled_img * max(max(summed));
-            maskTexture = Screen('MakeTexture', expWin, phase_scrambled_img*255);
-        end
+        imageTextureT = Screen('MakeTexture', expWin, blurred*255);
+        imageTexture  = Screen('MakeTexture', expWin, blurred_b*255);
     
-        for flip_count=1:duration_flips
-            Screen('DrawTexture', expWin, imageTexture);
-            Screen('Flip', expWin);
-        end
-        
-        if draw_mask
-            
-            for flip_count=1:duration_flips 
-                Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
-                Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
-                Screen('DrawTexture', expWin, maskTexture );
+        [x,y] = WindowCenter(expWin);
+        display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+        texture_width=display_pixels;
+        texture_height=display_pixels;
+
+        posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
+        posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
+
+        if duration_flips>0
+            for flip_count=1:duration_flips
+                for nquad=1:4
+                    if nquad==which_quad
+                        tex1=imageTextureT;
+                    else
+                        tex1=imageTexture;
+                    end
+                    x_pos=posx(nquad);
+                    y_pos=posy(nquad);
+                    dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
+                    Screen('DrawTexture', expWin, tex1, [], dstRect);
+                end
                 Screen('Flip', expWin);
             end
+        else
+            for nquad=1:4
+                if nquad==which_quad
+                    tex1=imageTextureT;
+                else
+                    tex1=imageTexture;
+                end
+                x_pos=posx(nquad);
+                y_pos=posy(nquad);
+                dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
+                Screen('DrawTexture', expWin, tex1, [], dstRect);
+            end
+            Screen('Flip', expWin);
+            KbWait([], 2); %wait for keystroke
         end
-    
+            
+
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
         
@@ -187,7 +188,7 @@ try
 
         correct=(resp_quad==which_quad);
 
-        results(ntrial,:)=[ntrial,which_image,blur_val,correct,which_quad,resp_quad,rt];
+        results(ntrial,:)=[ntrial,blur_baseline_D ,blur_multiplier*blur_baseline_D,correct,which_quad,resp_quad,rt];
         results(ntrial,:)
     end
     
@@ -209,7 +210,7 @@ try
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);
 
     if show_pf
-        variable=blur_levels_D;
+        variable=blur_levels_multiplier*blur_baseline_D;
         averages = zeros( [1 size(variable,2)]);
         for n=1:size(averages,2)
             % Sum the correct column of the results for each level
