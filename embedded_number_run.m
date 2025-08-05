@@ -1,10 +1,14 @@
-trial_order=repmat( text_sizes, [1, num_repeats]);
+trial_order=repmat( blur_levels_D, [1, num_repeats]);
 num_trials = size(trial_order,2);
 trial_order=trial_order( randperm(num_trials) );
 
 %Prepare output
-colHeaders = {'trial_num', 'string','size','correct','number','resp','rt'};
+colHeaders = {'trial_num', 'string','size_denominator','correct','number','resp','rt'};
 results=NaN * ones(length(trial_order),length(colHeaders)); %preallocate results matrix
+
+text_MAR = text_denominator/20;
+text_height_pixels =floor( text_MAR /arcmin_per_pixel * 5 )
+text_height = floor( text_height_pixels / text_scaling_factor)
 
 try
     % Enable unified mode of KbName, so KbName accepts identical key names on
@@ -44,6 +48,7 @@ try
         [expWin,rect] = Screen('OpenWindow', screenNumber, background, partialRect);
     end
 
+    Screen('TextFont', expWin, text_font);
     fliprate=Screen('GetFlipInterval', expWin); % e.g. 1/60.
     duration_flips = floor( stimulus_duration/fliprate );
 
@@ -57,7 +62,11 @@ try
     HideCursor;
 
     for ntrial=1:num_trials
-        which_size = trial_order(ntrial);
+
+        which_blur = trial_order(ntrial);
+        Z_blur_um = which_blur / 2 / sqrt(6) * (pupil_mm/2)^2
+        psf=defocus_psf(psf_pixels,which_blur,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        
         randstr_len1 = randi(randstr_lengths);
         randstr=[];
         for n=1:randstr_len1
@@ -80,8 +89,8 @@ try
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
     
-        % Draw 'myText', centered in the display window:
-        %DrawFormattedText(expWin, 'Press a key to start', mx, my+50);
+        %DrawFormattedText(expWin, 'Ready', mx+50, my+50);
+
         Screen('Flip', expWin);
         KbWait([], 2); %wait for keystroke
     
@@ -93,15 +102,26 @@ try
             end
         end
     
-        Screen('TextSize', expWin, which_size);
+        Screen('TextSize', expWin, text_height);
 % Now horizontally and vertically centered:
         [nx, ny, bbox] = DrawFormattedText(expWin, randstr, 'center', 'center', background);
+        %Screen('Flip', expWin);
+        blur_text;
 
         % First one will be from DrawFT
-        for flip_count=2:duration_flips
+        if duration_flips>0
+            for flip_count=1:duration_flips
+                %Screen('Flip', expWin);
+                %Screen('DrawText', expWin, randstr, bbox(1), bbox(2), text_color);
+                %DrawFormattedText(expWin,randstr,'center','center',text_color);
+    
+                Screen('DrawTexture', expWin, stimulus);
+                Screen('Flip', expWin);
+            end
+        else % Negative duration: show forever
+            Screen('DrawTexture', expWin, stimulus);
             Screen('Flip', expWin);
-            Screen('DrawText', expWin, randstr, bbox(1), bbox(2), text_color);
-            %DrawFormattedText(expWin,randstr,'center','center',text_color);
+            KbWait([], 2); %wait for keystroke
         end
         
         if draw_mask            
@@ -110,7 +130,10 @@ try
                 %DrawFormattedText(expWin,masktext,'center','center',text_color);
                 Screen('Flip', expWin);
             end
+        else
+                Screen('Flip', expWin);            
         end
+       
     
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
@@ -128,21 +151,21 @@ try
         if isempty(cc) || strcmp(cc,'ESCAPE')
             break;   %break out of trials loop, but perform all the cleanup things
         else
-            resp=cc;
+            resp=cc(1);
         end
 
         correct=(resp==char(rand_num))*1.0;
 
         %results(ntrial,:)=[ntrial,randstr,text_size,correct,char(rand_num),resp,rt];
-        results(ntrial,:)=[ntrial,0.0,which_size,correct,char(rand_num),resp,rt*1000];
+        results(ntrial,:)=[ntrial,which_blur,text_MAR,correct,str2num(char(rand_num)),str2num(resp),rt*1000];
         results(ntrial,:)
     end
 
     n_unique=0;
-    output_filename=[output_name '.csv'];
+    output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
     while isfile( output_filename)
         n_unique = n_unique + 1;
-        output_filename = sprintf('%s_%02d.csv',output_name,n_unique);
+        output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
     end
 
     writecell(colHeaders, output_filename );
@@ -155,14 +178,17 @@ try
     %return to olddebuglevel
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);
 
-    averages = zeros( [1 size(text_sizes,2)]);
-    for n=1:size(averages,2)
-        % Sum the correct column of the results for each level
-        averages(n) = mean( results( results(:,3)==text_sizes(n), 4) );
+    if show_pf
+        variable=blur_levels_D;
+        averages = zeros( [1 size(variable,2)]);
+        for n=1:size(averages,2)
+            % Sum the correct column of the results for each level
+            averages(n) = mean( results( results(:,2)==variable(n), 4) );
+        end
+    
+        figure();
+        plot( variable, averages, 'o-');
     end
-
-    figure();
-    plot( text_sizes, averages, 'o-');
 
 catch
     % This section is executed only in case an error happens in the

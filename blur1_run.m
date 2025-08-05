@@ -190,12 +190,12 @@ try
         results(ntrial,:)=[ntrial,which_image,blur_val,correct,which_quad,resp_quad,rt];
         results(ntrial,:)
     end
-
+    
     n_unique=0;
-    output_filename=[output_name '.csv'];
+    output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
     while isfile( output_filename)
         n_unique = n_unique + 1;
-        output_filename = sprintf('%s_%02d.csv',output_name,n_unique);
+        output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
     end
 
     writecell(colHeaders, output_filename );
@@ -208,14 +208,17 @@ try
     %return to olddebuglevel
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);
 
-    averages = zeros( [1 size(sigmas,2)]);
-    for n=1:size(averages,2)
-        % Sum the correct column of the results for each level
-        averages(n) = mean( results( results(:,3)==sigmas(n), 4) );
+    if show_pf
+        variable=blur_levels_D;
+        averages = zeros( [1 size(variable,2)]);
+        for n=1:size(averages,2)
+            % Sum the correct column of the results for each level
+            averages(n) = mean( results( results(:,3)==variable(n), 4) );
+        end
+    
+        figure();
+        plot( variable, averages, 'o-');
     end
-
-    figure();
-    plot( sigmas, averages, 'o-');
 
 catch
     % This section is executed only in case an error happens in the
