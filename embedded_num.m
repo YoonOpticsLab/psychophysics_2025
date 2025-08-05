@@ -2,7 +2,7 @@ close('all'); clear('all');
 
 output_name='num_test';
 
-blur_levels_D=[0.1,0.5];
+blur_levels_D=[0.1,0.25];
 pupil_mm=6; % For D->Z_um,Z calculation
 pupil_real_mm=6;
 psf_pixels=128;
