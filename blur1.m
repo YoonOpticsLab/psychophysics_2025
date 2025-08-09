@@ -4,7 +4,7 @@ output_name='test';
 
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.25,1.5,2.0];
-blur_baseline_D=0.25;
+blur_baseline_D=0.5;
 num_repeats=4;
 
 pupil_mm=6; % For D->Z_um,Z calculation
@@ -13,7 +13,7 @@ psf_pixels=128;
 visualize_psf=0; % For debugging
 
 % Monitor & setup information
-distance_cm=300;
+distance_cm=100;
 monitor_horiz_size_cm=61.47; % 27" LG LCD (27GL83A)
 monitor_horiz_num_pixels=2560;
 gamma_exponent=2.2;
@@ -26,7 +26,11 @@ partialRect = [0 0 1024 1024];
 
 % Stimulus
 stimulus_duration = -0.50 ; % In seconds
-stimulus_size_deg = 0.5;
+
+%blur_levels_multiplier=[10^-0.1,10^0.1];
+blur_levels_multiplier=[1.25,1.5,2.0];
+blur_baseline_D=0.5;
+num_repeats=4;
 
 % Screen size and background
 background=[128,128,128];

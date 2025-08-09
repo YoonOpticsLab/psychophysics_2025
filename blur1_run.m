@@ -122,7 +122,8 @@ try
         imageTexture  = Screen('MakeTexture', expWin, blurred_b*255);
     
         [x,y] = WindowCenter(expWin);
-        display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+        %display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+		display_pixels = imsize(1);
         texture_width=display_pixels;
         texture_height=display_pixels;
 
