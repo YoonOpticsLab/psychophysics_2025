@@ -1,4 +1,4 @@
-function psf=defocus_psf(m,z4,arcmin_pixel_px,pupil_zernike,pupil_real,visualize_psf)
+function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil_zernike,pupil_real,visualize_psf)
 
     %m=129;  arcmin_pixel_px=0.2; 
     wave=0.555;
@@ -13,7 +13,8 @@ function psf=defocus_psf(m,z4,arcmin_pixel_px,pupil_zernike,pupil_real,visualize
     tr=r1(:,:)<=pupil_real/2; normalize=sum(sum(tr));
     
     wf=zeros(m);
-    wf=z4*sqrt(3)*(2*r1_norm.^2-1);
+    wf=z4*sqrt(3)*(2*r1_norm.^2-1) + z12 * sqrt(5) * (6*r1_norm.^4 - 6*r1_norm.^2 + 1);
+
     wf=wf.*tr;
     
     pupil_ft=tr.*exp(-2i*pi/wave*wf);

@@ -65,7 +65,7 @@ try
 
         which_blur = trial_order(ntrial);
         Z_blur_um = which_blur / 2 / sqrt(6) * (pupil_mm/2)^2
-        psf=defocus_psf(psf_pixels,Z_blur_um,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        psf=defocus_psf(psf_pixels,Z_blur_um,0,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
         
         randstr_len1 = randi(randstr_lengths);
         randstr=[];

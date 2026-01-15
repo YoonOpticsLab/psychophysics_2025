@@ -1,8 +1,8 @@
-close('all'); clear('all');
+ close('all'); clear('all');
 
 output_name='num_test';
 
-blur_levels_D=[0.01,0.2];
+blur_levels_D=[0.5,1.045];
 pupil_mm=3; % For D->Z_um,Z calculation
 pupil_real_mm=3;
 psf_pixels=128;
@@ -21,7 +21,7 @@ fullScreen=0; % if 0, use partialRect:
 partialRect = [0 0 1024 1024];
 
 % Stimulus
-stimulus_duration = -0.250 ; % In seconds (negative for infinite)
+stimulus_duration = 0.50 ; % In seconds (negative for infinite)
 text_denominator=200; % Snellen denominator
 num_repeats=4;
 draw_mask=0; % whether to draw a phase-scrambled post-mask
@@ -37,7 +37,7 @@ text_layout=2;
 text_spacing=1.5;
 
 % Random string params:
-randstr_lengths=[9 9];
+randstr_lengths=[89 9];
 use_uppercase=1; % else lower case
 skip_outermost=0; % avoid the first and last letters
 omit_zero=1; % ZERO ALWAYS OMITTED
