@@ -45,7 +45,7 @@ try
     %the only key still recognized.
     ListenChar(2);
 
-    Screen('Preference', 'SkipSyncTests', 1)
+    Screen('Preference', 'SkipSyncTests', 2)
 
     %Set higher DebugLevel, so that you don't get all kinds of messages flashed
     %at you each time you start the experiment:
@@ -63,6 +63,11 @@ try
     else
         [expWin,rect] = Screen('OpenWindow', screenNumber, background, partialRect);
     end
+
+    % Not using alpha channel for masking currently. Instead, direct math.
+    % Screen('BlendFunction', expWin, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    % use alpha channel for smoothing edge of disc?
+    %useAlpha = true;
 
     fliprate=Screen('GetFlipInterval', expWin); % e.g. 1/60.
     duration_flips = floor( stimulus_duration/fliprate );
@@ -84,6 +89,27 @@ try
     q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma,grain,range);
     %q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
 
+    display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+	%display_pixels = imsize(1);
+    texture_width=display_pixels;
+    texture_height=display_pixels;
+
+    %% Make a circular Gaussian mask for the image.
+    %mask parameters
+    maskRadius = texture_width/2;
+    maskSigma = maskRadius;
+    % smoothing method: cosine (0), smoothstep (1), inverse smoothstep (2)
+    maskMethod = 0;
+    %[masktex, maskrect] = CreateProceduralSmoothedDisc(expWin,...
+    %    texture_width, texture_height, [], maskRadius, maskSigma, useAlpha, maskMethod);
+    X=linspace(-1,1,texture_width);
+    Y=linspace(-1,1,texture_width);
+    [XX,YY]=meshgrid(X,Y);
+    RR=sqrt(XX.^2+YY.^2);
+    RR(RR>1)=1.0; % clip round edges
+    RR = 1 - RR; % invert
+    mask=RR / max(max(RR)); 
+%%
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
 
@@ -115,7 +141,6 @@ try
         blurred = conv2(img1,psf,'same');
         blurred = blurred - min(min(blurred));
         blurred = blurred / max(max(blurred));
-        blurred = blurred .^ (1/gamma_exponent);
 
         % 3 non-targets
         z4_um_b = z4_baseline_D / 2 / sqrt(6) * (pupil_mm/2)^2
@@ -123,8 +148,23 @@ try
         blurred_b = conv2(img1,psf_b,'same');
         blurred_b = blurred_b - min(min(blurred_b));
         blurred_b = blurred_b / max(max(blurred_b));
+
+        % Apply mask. Images go from 0-1. So to properly mask, need
+        % to recenter around zero, modulate with mask, then back to 0-1.
+        blurred = blurred - 0.5;
+        blurred_b = blurred_b - 0.5;
+        blurred = blurred .* mask;
+        blurred_b = blurred_b .* mask;
+        blurred = blurred + 0.5;
+        blurred_b = blurred_b + 0.5;
+
+        blurred = blurred .^ (1/gamma_exponent);
         blurred_b = blurred_b .^ (1/gamma_exponent);
 
+        % Make suitable for 8bit:
+        blurred = blurred * 255;
+        blurred_b = blurred_b * 255;
+        
         %summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
@@ -135,12 +175,15 @@ try
         Screen('Flip', expWin);
         KbWait([], 2); %wait for keystroke
     
-        imageTextureT = Screen('MakeTexture', expWin, blurred*255);
-        imageTexture  = Screen('MakeTexture', expWin, blurred_b*255);
+
+        imageTextureT = Screen('MakeTexture', expWin, blurred);
+        imageTexture  = Screen('MakeTexture', expWin, blurred_b);
     
+        save("blutted", 'blurred');
+
         [x,y] = WindowCenter(expWin);
-        %display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-		display_pixels = imsize(1);
+        display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+		%display_pixels = imsize(1);
         texture_width=display_pixels;
         texture_height=display_pixels;
 
@@ -159,6 +202,7 @@ try
                     y_pos=posy(nquad);
                     dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
                     Screen('DrawTexture', expWin, tex1, [], dstRect);
+                    %Screen('DrawTextures', expWin, masktex, [], dstRect, [], [], 1, [0, 0, 0, 1]', [], []);                    
                 end
                 Screen('Flip', expWin);
             end

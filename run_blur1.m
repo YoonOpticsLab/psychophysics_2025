@@ -9,8 +9,7 @@ visualize_psf=0;   % For debugging
 distance_cm=100;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
 monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
-gamma_exponent=2.2;
-
+stimulus_size_deg=4.0;
 
 prompt={'Subject ID:', 'Baseline defocus (D):', 'Baseline spherical (um):'};
 dlg_defaults={'TEST','0','0'};
@@ -59,10 +58,14 @@ range=4;
 %-0.6 seems ~ for 1D
 
 % Screen size and background
-background=[128,128,128];
+background_level=0.5;
 fix_size=10; % size of fixation cross (in pix)
 fullScreen=1;
 partialRect = [0 0 1024 1024];
+
+gamma_exponent=2.2;
+background=[background_level^(1/gamma_exponent),background_level^(1/gamma_exponent),background_level^(1/gamma_exponent)];
+background = background * 255;
 
 % Directory to randomly pull images from. All images are resized to the
 % size given. (May distort if not square.)
