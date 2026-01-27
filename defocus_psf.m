@@ -1,8 +1,8 @@
-function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil_zernike,pupil_real,visualize_psf)
+function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil,pupil_zernike,pupil_real,visualize_psf)
 
     %m=129;  arcmin_pixel_px=0.2; 
     wave=0.555;
-    pupil=wave*0.001*180/pi*60/arcmin_pixel_px; 
+    %pupil=wave*0.001*180/pi*60/arcmin_pixel_px; 
     %pupil_zernike=6;
     %pupil_real= 3;
     

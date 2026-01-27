@@ -1,4 +1,4 @@
- close('all'); clear('all');
+close('all'); clear('all');
 
 output_name='num_test';
 

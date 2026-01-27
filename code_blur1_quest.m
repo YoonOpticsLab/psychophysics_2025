@@ -5,7 +5,6 @@ trial_order=trial_order( randperm(num_trials) );
 targets = dir(sprintf('%s/%s',targets_dir,filename_mask));
 targets = targets;
 
-
 num_images = size(targets,1);
 %image_order = repmat( 1:num_images, [1 ceil(num_trials/num_images)]);
 %image_order = image_order(1:num_trials);
@@ -25,6 +24,12 @@ siz=size(img1,1)/4;
 %Prepare output
 colHeaders = {'trial_num', 'file','blur_sigma','correct','target_quad','resp','rt'};
 results=NaN * ones(length(trial_order),length(colHeaders)); %preallocate results matrix
+
+if (visualize_psf)
+    z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
+    psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
+    return;
+end
 
 try
     % Enable unified mode of KbName, so KbName accepts identical key names on
@@ -136,15 +141,15 @@ try
         img1 = img1 / max(max(img1));
 
         % Target
-        z4_um = (z4_delta_D + z4_baseline_D) / 2 / sqrt(6) * (pupil_mm/2)^2
-        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
+        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
         blurred = conv2(img1,psf,'same');
         blurred = blurred - min(min(blurred));
         blurred = blurred / max(max(blurred));
 
         % 3 non-targets
-        z4_um_b = z4_baseline_D / 2 / sqrt(6) * (pupil_mm/2)^2
-        psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
+        psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
         blurred_b = conv2(img1,psf_b,'same');
         blurred_b = blurred_b - min(min(blurred_b));
         blurred_b = blurred_b / max(max(blurred_b));
