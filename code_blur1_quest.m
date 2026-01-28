@@ -174,17 +174,17 @@ try
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
-    
-        % Draw 'myText', centered in the display window:
-        %DrawFormattedText(expWin, 'Press a key to start', mx, my+50);
         Screen('Flip', expWin);
-        KbWait([], 2); %wait for keystroke
-    
+        %KbWait([], 2); %wait for keystroke
+        keyIsDown=0;
+        while (keyIsDown==0)
+            [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
+        end
 
         imageTextureT = Screen('MakeTexture', expWin, blurred);
         imageTexture  = Screen('MakeTexture', expWin, blurred_b);
     
-        save("blutted", 'blurred');
+        %save("blutted", 'blurred');
 
         [x,y] = WindowCenter(expWin);
         display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
@@ -195,8 +195,13 @@ try
         posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
         posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
 
+        flips_remaining=duration_flips;
+        done=0;
         if duration_flips>0
-            for flip_count=1:duration_flips
+             KbReleaseWait(); % Clear buffer
+             % Just to get the correct time for secs_stim_on:
+            [keyIsDown, secs_stim_on, keyCode, deltaSecs] = KbCheck();
+            while ( (flips_remaining>0) && (done==0) )
                 for nquad=1:4
                     if nquad==which_quad
                         tex1=imageTextureT;
@@ -209,8 +214,18 @@ try
                     Screen('DrawTexture', expWin, tex1, [], dstRect);
                     %Screen('DrawTextures', expWin, masktex, [], dstRect, [], [], 1, [0, 0, 0, 1]', [], []);                    
                 end
+
+                [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
+                if (keyIsDown)
+                    done=1;
+                end
+
+                Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
+                Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
                 Screen('Flip', expWin);
-            end
+
+                flips_remaining = flips_remaining - 1;
+            end % while
         else
             for nquad=1:4
                 if nquad==which_quad
@@ -226,16 +241,21 @@ try
             Screen('Flip', expWin);
             KbWait([], 2); %wait for keystroke
         end
-            
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
-        
+        Screen('Flip', expWin);            
+        while (done==0) % No response yet. Wait for key
+            [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
+            if (keyIsDown)
+                done=1;
+            end
+        end
+        Screen('drawline',expWin,[255 255 255],mx-fix_size,my,mx+fix_size,my,2);
+        Screen('drawline',expWin,[255 255 255],mx,my-fix_size,mx,my+fix_size,2);        
         Screen('Flip', expWin);
 
-        tic;
-        [resptime, keyCode] = KbWait;
-        rt=toc;
+        rt=secs_response-secs_stim_on;
 
         %find out which key was pressed
         cc=KbName(keyCode);  %translate code into letter (string)
@@ -272,9 +292,12 @@ try
     writematrix(results, output_filename, 'WriteMode', 'Append' );
 
     %clean up before exit
+    KbCheck();
+    KbReleaseWait(); % Remove any keys from buffer: avoid junk in window
     ShowCursor;
     sca; %or sca;
     ListenChar(0);
+    KbReleaseWait(); % Remove any keys from buffer: avoid junk in window
     %return to olddebuglevel
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);
 
@@ -294,6 +317,7 @@ catch
     % This section is executed only in case an error happens in the
     % experiment code implemented between try and catch...
     ShowCursor;
+    KbReleaseWait(); % Remove any keys from buffer: avoid junk in window
     sca; %or sca
     ListenChar(0);
     Screen('Preference', 'VisualDebuglevel', olddebuglevel);

@@ -1,16 +1,21 @@
 close('all'); clear('all');
 
-pupil_mm=6; % For grid resolution
+% pupil_mm is computed below from the arcmin_per_pixel
 pupil_zernike_mm=3; % Z calculation and D->um
 pupil_real_mm=3; % any additional truncation
 psf_pixels=128;
-visualize_psf=1;   % For debugging
+visualize_psf=0;   % For debugging
 
 % Monitor & setup information
 distance_cm=400;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
 monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
 stimulus_size_deg=1.0;
+one_pixel_cm=monitor_horiz_size_cm/monitor_horiz_num_pixels
+arcmin_per_pixel = atan( one_pixel_cm/distance_cm ) / pi * 180 * 60
+
+wave=0.555;
+pupil_mm=wave*0.001*180/pi*60/arcmin_per_pixel; % Size of calc grid pupil size
 
 prompt={'Subject ID:', 'Baseline defocus (D):', 'Baseline spherical (um):'};
 dlg_defaults={'TEST','0','0'};
@@ -35,7 +40,7 @@ output_name=[cell2mat(answer(1)) '-z4_' num2str(z4_baseline_D) '-z12_' num2str(z
 %output_name=cell2mat(answer(2))+'-z4_'+z4_baseline_D+'-z12_'+z12_baseline_um+'-'+convertStringsToChars(dateTimeStr);
 
 % Stimulus
-stimulus_duration = 0.5; % In seconds
+stimulus_duration = 5; % In seconds
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
