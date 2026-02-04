@@ -2,6 +2,7 @@ if (~exist('gen1x.m'))
     disp('Adding contours/ to path..')
     addpath('contours/');
 end
+load("precomputed_shapes.mat");
 
 trial_order=repmat( blur_levels_multiplier, [1, num_repeats]);
 num_trials = size(trial_order,2);
@@ -147,52 +148,23 @@ try
             alternate_classes = [2,3];
         end
 
-        %img1=imread(fullname);
         tic;
-        img1=gen1x(fullname,tTest_spac,clutter_spac,1);
+        img1=gen1x_second(precomputed_shape{which_image},tTest_spac,clutter_spac,1);
         duration_gen = toc;
+        time_max = 0.75;
         % To make sure that time isn't giving a cue, pause
-        % so they are all about 2 sec.
-        if (duration_gen < 4)
-            pause ( 4 - duration_gen);
+        % so they are all about time_max sec.
+        if (duration_gen < time_max)
+            pause ( time_max - duration_gen);
         end
         img1=imresize(img1,imsize);
-
-        %img1 = im2double(im2gray(img1)); % Convert to grayscale and double % Make b&w
-        %img1 = img1 - min(min(img1));
-        %img1 = img1 / max(max(img1));
-        %img1 = img1 * 2.0 - 1; % make -1 to 1 for convolution
 
         % Target
         z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2;
         psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
         blurred = conv2(img1,psf,'same');
-        %blurred = img1;
 
-        %blurred = blurred - min(min(blurred));
-        %blurred = blurred / max(max(blurred));
-
-        %blurred = blurred - mean(blurred(:));
-        %blurred = blurred / std( blurred(:));
-        %blurred = blurred / 2.0 + 0.5; % then back to 0 to 1
-        max( blurred(:)), min( blurred(:)), mean(blurred(:)), mean( img1(:) )
-        %blurred = blurred / 2.0 + 0.5; % then back to 0 to 1
-
-        % 3 non-targets
-     %   z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-     %   psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_zernike_mm,pupil_real_mm,visualize_psf);
-     %   blurred_b = conv2(img1,psf_b,'same');
-     %   blurred_b = blurred_b - min(min(blurred_b));
         blurred_b = blurred;
-
-        % Apply mask. Images go from 0-1. So to properly mask, need
-        % to recenter around zero, modulate with mask, then back to 0-1.
-%         blurred = blurred - 0.5;
-%         blurred_b = blurred_b - 0.5;
-%         blurred = blurred .* mask;
-%         blurred_b = blurred_b .* mask;
-%         blurred = blurred + 0.5;
-%         blurred_b = blurred_b + 0.5;
 
         blurred = blurred .^ (1/gamma_exponent);
         blurred_b = blurred_b .^ (1/gamma_exponent);
@@ -201,8 +173,6 @@ try
         blurred = blurred * 255;
         blurred_b = blurred_b * 255;
         
-        %summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
-
         % "ready" fixation:
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
@@ -215,20 +185,13 @@ try
 
         imageTextureT = Screen('MakeTexture', expWin, blurred);
         imageTexture  = Screen('MakeTexture', expWin, blurred_b);
-    
-        %save("blutted", 'blurred');
 
         [x,y] = WindowCenter(expWin);
         display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-		%display_pixels = imsize(1);
         texture_width=display_pixels;
         texture_height=display_pixels;
 
         % Center of the window
-        %posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
-        %posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
-        %posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
-        %posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
         posx = [x,x,x,x];
         posy = [y,y,y,y];
 
@@ -284,31 +247,11 @@ try
         Screen('Flip', expWin);
 
         % RESPONSE SCREEN
-       % Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
-       % Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
- %posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
         posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
         posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];       
         options = [1:which_image-1 which_image+1:num_images];
         options_which = randperm(num_images-1);
         options4 = options(options_which);
-%         for nquad=1:4
-%             if nquad==which_quad
-%                 n_im=which_image;
-%             else
-%                 n_im=options4(nquad)
-%             end            
-%             target1=targets(n_im);
-%             fullname = [target1.folder '/' target1.name]
-%             img1=gen1x_noblur(fullname,tTest_spac);
-%             img1=imresize(img1,imsize);
-%             tex1 = Screen('MakeTexture', expWin, img1*255);
-%             x_pos=posx(nquad);
-%             y_pos=posy(nquad);
-%             dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
-%             Screen('DrawTexture', expWin, tex1, [], dstRect);
-%             %Screen('DrawTextures', expWin, masktex, [], dstRect, [], [], 1, [0, 0, 0, 1]', [], []);                    
-%        end
 
         Screen('drawline',expWin,[255 255 255],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[255 255 255],mx,my-fix_size,mx,my+fix_size,2);        
@@ -358,15 +301,15 @@ try
 
         q=QuestUpdate(q,tTest,correct); % Add the new datum (actual test intensity and observer response) to the database.
 
-        results(ntrial,:)=[ntrial,z4_baseline_D ,z4_delta_D+z4_baseline_D,correct,target_class,resp_class,rt];
+        results(ntrial,:)=[ntrial,z4_delta_D ,z4_delta_D,correct,target_class,resp_class,rt];
         results(ntrial,:)
     end
     
     n_unique=0;
-    output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
+    output_filename = sprintf('results/contour-%s_%02d.csv',output_name,n_unique);
     while isfile( output_filename)
         n_unique = n_unique + 1;
-        output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
+        output_filename = sprintf('results/contour-%s_%02d.csv',output_name,n_unique);
     end
 
     writecell(colHeaders, output_filename );
@@ -384,13 +327,13 @@ try
 
     if show_pf
         final_delta = QuestQuantile(q);
-        final_D = (final_delta + z4_baseline_D);
-        delta = (final_D - z4_baseline_D );
-        final_report = ["Baseline defocus (D): "+num2str(z4_baseline_D), "Baseline spherical (um): "+num2str(z12_baseline_um), "Final Threshold: "+num2str(final_D) ]
+        final_D = (z4_delta_D);
+        delta = (z4_delta_D );
+        final_report = "Contours"; %["Baseline defocus (D): "+num2str(z4_delta_D), "Baseline spherical (um): "+num2str(z12_baseline_um), "Final Threshold: "+num2str(final_D) ]
         plot( results(:,3), 'o-' );
         title(final_report);
         yl = yline(final_D,'--',"Threshold="+final_D,'LineWidth',3);
-        ylabel( "Spacing")
+        ylabel( "Defocus (D)")
         xlabel( "Trial number")
     end
 

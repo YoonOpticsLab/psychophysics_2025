@@ -7,4 +7,6 @@ elseif strcmp(which_experiment,'embedded_num')
     code_embedded_number;
 elseif strcmp(which_experiment,'contour')
     code_contour;
+elseif strcmp(which_experiment,'contour_spherical')
+    code_contour_spherical;    
 end
