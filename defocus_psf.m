@@ -1,4 +1,4 @@
-function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil,pupil_zernike,pupil_real,visualize_psf)
+function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil,pupil_zernike,pupil_real,visualize_psf,normalize_area)
 
     %m=129;  arcmin_pixel_px=0.2; 
     wave=0.555;
@@ -22,6 +22,10 @@ function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil,pupil_zernike,pupil_real
     psf=fft_pupil_ft.*conj(fft_pupil_ft);
     psf=psf/(normalize^2);   Strehl = max(max(psf));
     
+    if normalize_area
+        psf = psf / (sum(psf(:)));
+    end
+    
     psf_resolution=wave*0.001*180/pi*60/pupil; % in arcmin
     psf_x=linspace(-psf_resolution*m/2, psf_resolution*m/2, m);
     
@@ -29,5 +33,6 @@ function psf=defocus_psf(m,z4,z12,arcmin_pixel_px,pupil,pupil_zernike,pupil_real
         figure(); 
         subplot(1,2,1); imagesc(xx1,yy1,wf); xlabel('Pupil radius_x (mm)'); ylabel('Pupil radius_y (mm)'); axis image; colorbar('vert'); title('defocus map');
         subplot(1,2,2); imagesc(psf_x,psf_x,psf); xlabel('PSF radius_x (armins)'); ylabel('PSF radius_y (arcmins)'); axis image; colorbar('vert'); title('PSF');
+        figure; plot(wf(:,65));
     end
 end

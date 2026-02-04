@@ -27,7 +27,7 @@ results=NaN * ones(length(trial_order),length(colHeaders)); %preallocate results
 
 if (visualize_psf)
     z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-    psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
+    psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
     return;
 end
 
@@ -111,9 +111,12 @@ try
     Y=linspace(-1,1,texture_width);
     [XX,YY]=meshgrid(X,Y);
     RR=sqrt(XX.^2+YY.^2);
-    RR(RR>1)=1.0; % clip round edges
-    RR = 1 - RR; % invert
-    mask=RR / max(max(RR)); 
+    %RR(RR>1)=1.0; % clip round edges
+    
+    sigma2 = 0.4;
+    mask_good=exp( -( (RR/2/sigma2).^8) ) ;
+    mask = mask_good / max(max(mask_good));
+    %mask=RR*0+1;
 %%
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
@@ -142,14 +145,14 @@ try
 
         % Target
         z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
+        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
         blurred = conv2(img1,psf,'same');
         blurred = blurred - min(min(blurred));
         blurred = blurred / max(max(blurred));
 
         % 3 non-targets
         z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-        psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf);
+        psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
         blurred_b = conv2(img1,psf_b,'same');
         blurred_b = blurred_b - min(min(blurred_b));
         blurred_b = blurred_b / max(max(blurred_b));

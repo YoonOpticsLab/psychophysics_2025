@@ -1,12 +1,13 @@
 close('all'); clear('all');
 
 % pupil_mm is computed below from the arcmin_per_pixel
-pupil_zernike_mm=3; % Z calculation and D->um
-pupil_real_mm=3; % any additional truncation
+pupil_zernike_mm=4; % Z calculation and D->um
+pupil_real_mm=4; % any additional truncation
 psf_pixels=128;
 visualize_psf=0;   % For debugging
+psf_normalize_area=1; % Want this normalization. 2026/2/4
 
-% Monitor & setup information
+% Monitor & setup information3
 distance_cm=400;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
 monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
@@ -40,7 +41,9 @@ output_name=[cell2mat(answer(1)) '-z4_' num2str(z4_baseline_D) '-z12_' num2str(z
 %output_name=cell2mat(answer(2))+'-z4_'+z4_baseline_D+'-z12_'+z12_baseline_um+'-'+convertStringsToChars(dateTimeStr);
 
 % Stimulus
-stimulus_duration = 5; % In seconds
+stimulus_duration = 0.5; % In seconds
+
+
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
@@ -57,8 +60,8 @@ tGuessSd = 3.0;
 
 % Define stimulus range (NOT log units)
 tMin = (0.01);  % Minimum allowed intensity
-tMax = (3.0);  % Maximum allowed intensity
-grain = 0.01;       % Step size in log units
+tMax = (2.0);   % Maximum allowed intensity
+grain = 0.01;   % Step size in log units
 range=4; 
 
 %-0.6 seems ~ for 1D
