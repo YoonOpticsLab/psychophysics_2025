@@ -140,8 +140,11 @@ try
         img1=imresize(img1,imsize);
 
         img1 = im2double(im2gray(img1)); % Convert to grayscale and double % Make b&w
-        img1 = img1 - min(min(img1));
-        img1 = img1 / max(max(img1));
+
+        if ~psf_normalize_area
+            img1 = img1 - min(min(img1));
+            img1 = img1 / max(max(img1));
+        end
 
         % Target
         z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2

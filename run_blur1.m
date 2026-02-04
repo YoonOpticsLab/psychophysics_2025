@@ -5,9 +5,9 @@ pupil_zernike_mm=4; % Z calculation and D->um
 pupil_real_mm=4; % any additional truncation
 psf_pixels=128;
 visualize_psf=0;   % For debugging
-psf_normalize_area=1; % Want this normalization. 2026/2/4
+psf_normalize_area=0; % Want this normalization. 2026/2/4
 
-% Monitor & setup information3
+% Monitor & setup information
 distance_cm=400;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
 monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
