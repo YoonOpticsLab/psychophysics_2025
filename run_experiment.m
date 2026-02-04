@@ -5,4 +5,6 @@ if strcmp(which_experiment,'blur1')
     code_blur1_quest;
 elseif strcmp(which_experiment,'embedded_num')
     code_embedded_number;
+elseif strcmp(which_experiment,'contour')
+    code_contour;
 end
