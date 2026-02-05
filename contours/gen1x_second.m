@@ -14,11 +14,16 @@ b_idx = gettag(Ea,'b');
 gabel_params.scale = scale;
 
 gabel_params.or(b_idx) = GERT_Aux_RestrictResolution(2*pi*rand(1,length(b_idx)),pi/50);
-
 gabel_params.or(c_idx) = ors + 3.14/10.0 * (rand(1,length(c_idx))-0.5) ;
 %gabel_params.lum_bounds(c_idx) = {[0.5 0 0; 0.5 0.5 0.5; 1 0.5 0.5]'};
 gabel_params.lum_bounds(c_idx) = {[0 0 0; 0.5 0.5 0.5; 1 1 1]'};
 gabel_params.lum_bounds(b_idx) = {[0 0 0; 0.5 0.5 0.5; 1 1 1]'};
+gabel_params.sigma = 3;
+
+%  gabel_params.size = 200;
+%  gabel_params.freq = 0.1071;
+gabel_params.phase(b_idx) = pi/2 * randsample([-1,1],length(b_idx), true );  %pi/2;
+gabel_params.phase(c_idx) = pi/2 * randsample([-1,1],length(c_idx), true );  %pi/2;
 
 Ea.x(c_idx) = Ea.x(c_idx) + 12*(rand(1,length(c_idx))-0.5);
 
