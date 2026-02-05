@@ -41,12 +41,12 @@ output_name=[cell2mat(answer(1)) '-z4_' num2str(z4_baseline_D) '-z12_' num2str(z
 %output_name=cell2mat(answer(2))+'-z4_'+z4_baseline_D+'-z12_'+z12_baseline_um+'-'+convertStringsToChars(dateTimeStr);
 
 % Stimulus
-stimulus_duration = 0.750; % In seconds
+stimulus_duration = 2; % In seconds
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
 % Specific to contour task:
-tTest_spac=1.5;
+tTest_spac=1.75;
 clutter_spac=2.0;
 
 wave=0.555;

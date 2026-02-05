@@ -163,16 +163,14 @@ try
         z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2;
         psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
         blurred = conv2(img1,psf,'same');
-
-        blurred_b = blurred;
-
         blurred = blurred .^ (1/gamma_exponent);
-        blurred_b = blurred_b .^ (1/gamma_exponent);
-
         % Make suitable for 8bit:
         blurred = blurred * 255;
-        blurred_b = blurred_b * 255;
-        
+
+        if (rand()<0.5)
+            blurred=fliplr(blurred);
+        end
+
         % "ready" fixation:
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
@@ -183,8 +181,7 @@ try
             [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
         end
 
-        imageTextureT = Screen('MakeTexture', expWin, blurred);
-        imageTexture  = Screen('MakeTexture', expWin, blurred_b);
+        imageTexture  = Screen('MakeTexture', expWin, blurred);
 
         [x,y] = WindowCenter(expWin);
         display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
@@ -202,42 +199,27 @@ try
              % Just to get the correct time for secs_stim_on:
             [keyIsDown, secs_stim_on, keyCode, deltaSecs] = KbCheck();
             while ( (flips_remaining>0) && (done==0) )
-                for nquad=1:1
-                    if nquad==which_quad
-                        tex1=imageTextureT;
-                    else
-                        tex1=imageTexture;
-                    end
-                    x_pos=posx(nquad);
-                    y_pos=posy(nquad);
-                    dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
-                    Screen('DrawTexture', expWin, tex1, [], dstRect);
-                    %Screen('DrawTextures', expWin, masktex, [], dstRect, [], [], 1, [0, 0, 0, 1]', [], []);                    
-                end
+                tex1=imageTexture;
+                x_pos=posx(1);
+                y_pos=posy(1);
+                dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
+                Screen('DrawTexture', expWin, tex1, [], dstRect);
 
                 [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
                 if (keyIsDown)
                     done=1;
                 end
 
-                %Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
-                %Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
                 Screen('Flip', expWin);
 
                 flips_remaining = flips_remaining - 1;
             end % while
         else
-            for nquad=1:4
-                if nquad==which_quad
-                    tex1=imageTextureT;
-                else
-                    tex1=imageTexture;
-                end
-                x_pos=posx(nquad);
-                y_pos=posy(nquad);
-                dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
-                Screen('DrawTexture', expWin, tex1, [], dstRect);
-            end
+            tex1=imageTexture;
+            x_pos=posx(1);
+            y_pos=posy(1);
+            dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
+            Screen('DrawTexture', expWin, tex1, [], dstRect);
             Screen('Flip', expWin);
             KbWait([], 2); %wait for keystroke
         end
