@@ -150,7 +150,7 @@ try
 
         %img1=imread(fullname);
         tic;
-        img1=gen1x_second(precomputed_shape{which_image},tTest_spac,clutter_spac,1);        
+        img1=gen1x_second(precomputed_shape{which_image},tTest_spac,clutter_spac,2.0);        
         duration_gen = toc;
         time_max = 0.75;
         % To make sure that time isn't giving a cue, pause

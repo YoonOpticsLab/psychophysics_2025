@@ -46,8 +46,8 @@ stimulus_duration = 2; % In seconds
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
 % Specific to contour task:
-tTest_spac=1.75;
-clutter_spac=2.0;
+tTest_spac=  1.75 * 1.5;
+clutter_spac=2.0  * 1.5;
 
 wave=0.555;
 pupil_mm=wave*0.001*180/pi*60/arcmin_per_pixel; % Size of calc grid pupil size
