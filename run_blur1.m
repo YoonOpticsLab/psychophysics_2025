@@ -1,11 +1,13 @@
 close('all'); clear('all');
 
-% pupil_mm is computed below from the arcmin_per_pixel
+% pupil_mm is computed below from the arcmin_per_pixel73
 pupil_zernike_mm=4; % Z calculation and D->um
 pupil_real_mm=4; % any additional truncation
 psf_pixels=128;
 visualize_psf=0;   % For debugging
 psf_normalize_area=0; % Want this normalization. 2026/2/4
+
+save_image_snapshots=0;
 
 % Monitor & setup information
 distance_cm=400;
@@ -47,7 +49,7 @@ stimulus_duration = 0.5; % In seconds
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
-% THIS IS COMMENT. PUT CURSOR HERE TO AVOID PROBLEMS
+% THIS IS COMMENT. PUT CURSOR HERE TO AVOI1D PROBLEMS
 
 num_repeats=40; % For quest, this is number of trials in Quest
 

@@ -144,6 +144,9 @@ try
                     Screen('DrawTexture', expWin, tex1, [], dstRect);
                 end
                 Screen('Flip', expWin);
+
+                imageScreen = Screen('GetImage', expWin);
+                imwrite(imageScreen, "screenshot.png");
             end
         else
             for nquad=1:4

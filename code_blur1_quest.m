@@ -189,12 +189,9 @@ try
 
         imageTextureT = Screen('MakeTexture', expWin, blurred);
         imageTexture  = Screen('MakeTexture', expWin, blurred_b);
-    
-        %save("blutted", 'blurred');
 
         [x,y] = WindowCenter(expWin);
         display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-		%display_pixels = imsize(1);
         texture_width=display_pixels;
         texture_height=display_pixels;
 
@@ -248,6 +245,16 @@ try
             KbWait([], 2); %wait for keystroke
         end
 
+        if save_image_snapshots
+            imageScreen = Screen('GetImage', expWin);
+            % Convert the datetime object to a st15ring using the specified format
+            currentTime = datetime('now');
+            dateTimeStr = string(currentTime, 'yyyy-MM-dd_HH-mm-ss');
+            filname=['screenshot-' convertStringsToChars(dateTimeStr) '.png'];                
+            imwrite(imageScreen,filname );
+        end
+
+        % Erase with only fixation screen
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
         Screen('Flip', expWin);            
