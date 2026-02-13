@@ -149,7 +149,7 @@ try
         end
 
         tic;
-        img1=gen1x_second(precomputed_shape{which_image},tTest_spac,clutter_spac,1);
+        img1=gen1x_second(precomputed_shape{which_image},tTest_spac,clutter_spac,2.0);
         duration_gen = toc;
         time_max = 0.75;
         % To make sure that time isn't giving a cue, pause
@@ -224,6 +224,16 @@ try
             KbWait([], 2); %wait for keystroke
         end
 
+        if save_image_snapshots
+            imageScreen = Screen('GetImage', expWin);
+            % Convert the datetime object to a st15ring using the specified format
+            currentTime = datetime('now');
+            dateTimeStr = string(currentTime, 'yyyy-MM-dd_HH-mm-ss');
+            filname=['contour-screenshot-' convertStringsToChars(dateTimeStr) '.png'];                
+            imwrite(imageScreen,filname );
+        end
+
+        % Clear screen:
         Screen('drawline',expWin,[255 255 255],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[255 255 255],mx,my-fix_size,mx,my+fix_size,2);        
         Screen('Flip', expWin);

@@ -6,6 +6,7 @@ pupil_real_mm=3; % any additional truncation
 psf_pixels=128;
 visualize_psf=0;   % For debugging
 psf_normalize_area=1;
+save_image_snapshots=0;
 
 % Monitor & setup information
 distance_cm=400;
@@ -46,8 +47,10 @@ stimulus_duration = 2; % In seconds
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
 % Specific to contour task:
-tTest_spac=1.75;
-clutter_spac=2.0;
+%tTest_spac=1.75;
+%clutter_spac=2.0;99
+tTest_spac=  1.75 * 1.5;
+clutter_spac=2.0  * 1.5;
 
 wave=0.555;
 pupil_mm=wave*0.001*180/pi*60/arcmin_per_pixel; % Size of calc grid pupil size
