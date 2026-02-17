@@ -1,5 +1,13 @@
 close('all'); clear('all');
 
+% run_riq uses a "pair file" that is pre-generated based on the desired metric 
+% functions. To rebuild this,
+
+% First run RIQ_pair.m, which reads in the .csv from GY, and determines which
+% pairs to test. In line 4, the second parameter is the interpolation factor (how
+% many points to interpolate between each source data point), and the third
+% parameter is which metric to use from the original CSV.
+
 % pupil_mm is computed below from the arcmin_per_pixel
 pupil_zernike_mm=4; % Z calculation and D->um
 pupil_real_mm=4; % any additional truncation
