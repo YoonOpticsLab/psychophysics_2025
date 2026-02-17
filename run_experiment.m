@@ -10,5 +10,7 @@ elseif strcmp(which_experiment,'contour')
 elseif strcmp(which_experiment,'contour_spherical')
     code_contour_spherical;
 elseif strcmp(which_experiment,'RIQ_pairs')
-    code_riq;        
+    code_riq;
+elseif strcmp(which_experiment,'natural')
+    code_natural_quest;      
 end
