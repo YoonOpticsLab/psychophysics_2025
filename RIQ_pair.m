@@ -1,11 +1,11 @@
 close all; clear all;
 
 % Call with interpolation factor (default 10x if not specified)
-pairs = find_peak_pairs('RIQ_data_origin.csv', 5);
+pairs = find_peak_pairs('RIQ_data_origin.csv', 5, 3);
 
-%save('RIQ_pairs','pairs')
+save('RIQ_pairs','pairs')
 
-function [pairs] = find_peak_pairs(filename, interp_factor)
+function [pairs] = find_peak_pairs(filename, interp_factor,which_row)
 % FIND_PEAK_PAIRS Finds peak and symmetric y-value pairs around the peak
 %
 % Input:
@@ -31,7 +31,7 @@ function [pairs] = find_peak_pairs(filename, interp_factor)
     
     % Assuming first row is x, second row is y
     x_raw = data(1, :);
-    y_raw = data(2, :);
+    y_raw = data(which_row, :);
     
     fprintf('Original data: %d points\n', length(x_raw));
     
