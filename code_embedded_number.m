@@ -64,10 +64,14 @@ try
     for ntrial=1:num_trials
 
         which_blur = trial_order(ntrial);
-        Z_blur_um = which_blur / 2 / sqrt(6) * (pupil_mm/2)^2
-        psf=defocus_psf(psf_pixels,Z_blur_um,0,arcmin_per_pixel,pupil_mm,pupil_real_mm,visualize_psf);
+        z4_um = which_blur /  4 / sqrt(3) * (pupil_zernike_mm/2)^2
+        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
         
-        randstr_len1 = randi(randstr_lengths);
+        if text_layout==2
+            randstr_len1=9;
+        else    
+            randstr_len1 = randi(randstr_lengths);
+        end
         randstr=[];
         for n=1:randstr_len1
             if use_uppercase
@@ -108,6 +112,9 @@ try
         %Screen('Flip', expWin);
         blur_text;
 
+
+        tic;
+
         % First one will be from DrawFT
         if duration_flips>0
             for flip_count=1:duration_flips
@@ -134,14 +141,18 @@ try
                 Screen('Flip', expWin);            
         end
        
-    
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
         
         Screen('Flip', expWin);
 
-        tic;
-        [resptime, keyCode] = KbWait;
+        done=0;
+        while (done==0) % No response yet. Wait for key
+            [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
+            if (keyIsDown)
+                done=1;
+            end
+        end
         rt=toc;
 
         %find out which key was pressed

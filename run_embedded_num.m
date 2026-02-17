@@ -1,17 +1,27 @@
 close('all'); clear('all');
 
 output_name='num_test';
+z12_baseline_um=0;
 
 blur_levels_D=[0.5,1.045];
-pupil_mm=3; % For D->Z_um,Z calculation
-pupil_real_mm=3;
+% pupil_mm is computed below from the arcmin_per_pixel73
+pupil_zernike_mm=4; % Z calculation and D->um
+pupil_real_mm=4; % any additional truncation
 psf_pixels=128;
-visualize_psf=0; % For debugging
+visualize_psf=0;   % For debugging
+psf_normalize_area=0; % Want this normalization. 2026/2/4
 
 % Monitor & setup information
-distance_cm=200;
-monitor_horiz_size_cm=61.47; % 27" LG LCD (27GL83A)
-monitor_horiz_num_pixels=2560;
+distance_cm=400;
+monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
+monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
+stimulus_size_deg=1.0;
+one_pixel_cm=monitor_horiz_size_cm/monitor_horiz_num_pixels
+arcmin_per_pixel = atan( one_pixel_cm/distance_cm ) / pi * 180 * 60
+
+wave=0.555;
+pupil_mm=wave*0.001*180/pi*60/arcmin_per_pixel; % Size of calc grid pupil size
+
 gamma_exponent=2.2;
 
 % Screen size & color info
@@ -21,8 +31,8 @@ fullScreen=0; % if 0, use partialRect:
 partialRect = [0 0 1024 1024];
 
 % Stimulus
-stimulus_duration = 0.50 ; % In seconds (negative for infinite)
-text_denominator=200; % Snellen denominator
+stimulus_duration = 0.25 ; % In seconds (negative for infinite)
+text_denominator=40; % Snellen denominator
 num_repeats=4;
 draw_mask=0; % whether to draw a phase-scrambled post-mask
 
@@ -37,7 +47,7 @@ text_layout=2;
 text_spacing=1.5;
 
 % Random string params:
-randstr_lengths=[89 9];
+randstr_lengths=[9];
 use_uppercase=1; % else lower case
 skip_outermost=0; % avoid the first and last letters
 omit_zero=1; % ZERO ALWAYS OMITTED
