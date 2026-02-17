@@ -4,14 +4,15 @@ close('all'); clear('all');
 pupil_zernike_mm=4; % Z calculation and D->um
 pupil_real_mm=4; % any additional truncation
 psf_pixels=128;
-visualize_psf=0;   % For debugging
+visualize_psf=0 ;   % For debugging
 psf_normalize_area=1; % Want this normalization. 2026/2/4
+num_repeats=2;
 
 % Monitor & setup information
 distance_cm=400;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
-monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
-stimulus_size_deg=1.0;
+monitor_horiz_num_pixels=19920; % For HP VH240a in 2308D
+stimulus_size_deg=4.0;
 one_pixel_cm=monitor_horiz_size_cm/monitor_horiz_num_pixels
 arcmin_per_pixel = atan( one_pixel_cm/distance_cm ) / pi * 180 * 60
 
@@ -50,8 +51,7 @@ load("RIQ_pairs.mat")
 
 % THIS IS COMMENT. PUT CURSOR HERE TO AVOID PROBLEMS
 
-% How many times to repeat each pair?
-num_repeats=2; % For quest, this is number of trials in Quest
+
 
 % QUEST params:
 pThreshold=0.82;
@@ -84,10 +84,12 @@ background = background * 255;
 %filename_mask='*.jpg';
 targets_dir='natural';
 filename_mask='*.png';
-imsize=[256,256];
+imsize=[512,512];
 
 show_pf=0;
 
 % RUN
 which_experiment='RIQ_pairs';
 run_experiment;
+
+

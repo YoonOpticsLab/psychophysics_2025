@@ -220,16 +220,16 @@ try
                 resp = 1;
                 valid_resp=1;
                 break;
-            elseif strcmp(cc,'2') || strcmp(cc,'e')
+            elseif strcmp(cc,'2') || strcmp(cc,'e') || strcmp(cc,'3')
                 resp = 2;
                 valid_resp=1;
                 break;
-            elseif strcmp(cc,'1!') || strcmp(cc,'q')
+            elseif strcmp(cc,'1!') || strcmp(cc,'q') || strcmp(cc,'7')
                 resp = 1;
                 valid_resp=1;
                 shift_down=1;
                 break;
-            elseif strcmp(cc,'2@') || strcmp(cc,'e')
+            elseif strcmp(cc,'2@') || strcmp(cc,'e') || strcmp(cc,'9')
                 resp = 2;
                 valid_resp=1;
                 shift_down=1;
@@ -284,5 +284,6 @@ catch
     %output the error message
     psychrethrow(psychlasterror);
 end
-  
+
+plot_riq(output_filename)
 
