@@ -57,12 +57,12 @@ num_repeats=40; % For quest, this is number of trials in Quest
 pThreshold=0.82;
 beta=3.5;delta=0.01;gamma=0.25; % 4 choices, gamma=1/4
 % We know from piloting around 1.5X is good (for 0.5D baseline):
-tGuess = 0.35; % TODO: Where is the best place to start the staircase?
+tGuess = 0.5; % TODO: Where is the best place to start the staircase?
 tGuessSd = 3.0;
 
 % Define stimulus range (NOT log units)
-tMin = (0.01);  % Minimum allowed intensity
-tMax = (2.0);   % Maximum allowed intensity
+tMin = -0.5;  % Minimum allowed intensity
+tMax = 1;   % Maximum allowed intensity
 grain = 0.01;   % Step size in log units
 range=4; 
 
@@ -82,8 +82,8 @@ background = background * 255;
 % size given. (May distort if not square.)
 %targets_dir='face_images';
 %filename_mask='*.jpg';
-targets_dir='natural';
-filename_mask='*.png';
+targets_dir='natural_category';
+filename_mask='*/*.JPEG';
 imsize=[512,512];
 
 show_pf=1;
