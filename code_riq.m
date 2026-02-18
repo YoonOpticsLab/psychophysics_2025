@@ -84,6 +84,17 @@ try
     % We choose a text size of 24 pixels - Well readable on most screens:
     Screen('TextSize', expWin, 48);
 
+    [x,y] = WindowCenter(expWin);
+    %display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
+    display_pixels = imsize(1);
+    texture_width=display_pixels;
+    texture_height=display_pixels;
+    
+    mask = make_mask(texture_width,0.4,8);
+    
+    posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
+    posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
+    
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
         blur_multiplier = trial_order(ntrial);
@@ -128,6 +139,9 @@ try
         blurred2 = blurred2 - min(min(blurred2));
         blurred2 = blurred2 / max(max(blurred2));
 
+        blurred1 =apply_mask(blurred1,mask);
+        blurred2 =apply_mask(blurred2,mask);
+
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
     
@@ -144,14 +158,6 @@ try
         noise_pix2=generate_2d_pink_noise(512,512,2);
         noise2=Screen('MakeTexture', expWin, noise_pix2*255);
 
-        [x,y] = WindowCenter(expWin);
-        %display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-		display_pixels = imsize(1);
-        texture_width=display_pixels;
-        texture_height=display_pixels;
-
-        posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
-        posy=[y-texture_height/2*1.1, y-texture_height/2*1.1, y+texture_height/2*1.1, y+texture_height/2*1.1];
 
         if duration_flips>0
             for flip_count=1:duration_flips
@@ -199,6 +205,8 @@ try
         valid_resp=0;
         keyIsDown=0;
         shift_down=0;
+        resp=-1;
+        breakout=0;
 
         while valid_resp==0
             while (keyIsDown==0)
@@ -213,10 +221,11 @@ try
                 cc=cc(1);
             end
 
-            if isempty(cc) || strcmp(cc,'ESCAPE')
+            if isempty(cc) || strcmp(cc,'ESCAPE')  || strcmp(cc,'q')
                 valid_resp=1;
+                breakout=1;
                 break;   %break out of trials loop, but perform all the cleanup things
-            elseif strcmp(cc,'1') || strcmp(cc,'q')
+            elseif strcmp(cc,'1')
                 resp = 1;
                 valid_resp=1;
                 break;
@@ -238,6 +247,11 @@ try
                 shift_down=1;
             end
         end
+
+        if breakout
+            break;
+        end
+
         rt=toc;
 
         %{'trial_num', 'which_image','x1','x2','metric','resp','shift','rt'};
