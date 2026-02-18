@@ -1,5 +1,3 @@
-
-
 function pink_image = generate_2d_pink_noise(rows, cols, expo)
     % Generate 2D 1/f (pink) noise image
     % rows = number of rows

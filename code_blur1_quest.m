@@ -95,29 +95,11 @@ try
     %q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
 
     display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-	%display_pixels = imsize(1);
     texture_width=display_pixels;
     texture_height=display_pixels;
 
-    %% Make a circular Gaussian mask for the image.
-    %mask parameters
-    maskRadius = texture_width/2;
-    maskSigma = maskRadius;
-    % smoothing method: cosine (0), smoothstep (1), inverse smoothstep (2)
-    maskMethod = 0;
-    %[masktex, maskrect] = CreateProceduralSmoothedDisc(expWin,...
-    %    texture_width, texture_height, [], maskRadius, maskSigma, useAlpha, maskMethod);
-    X=linspace(-1,1,texture_width);
-    Y=linspace(-1,1,texture_width);
-    [XX,YY]=meshgrid(X,Y);
-    RR=sqrt(XX.^2+YY.^2);
-    %RR(RR>1)=1.0; % clip round edges
-    
-    sigma2 = 0.4;
-    mask_good=exp( -( (RR/2/sigma2).^8) ) ;
-    mask = mask_good / max(max(mask_good));
-    %mask=RR*0+1;
-%%
+    mask = make_mask(texture_width,0.4,8);
+
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
 
@@ -160,23 +142,14 @@ try
         blurred_b = blurred_b - min(min(blurred_b));
         blurred_b = blurred_b / max(max(blurred_b));
 
-        % Apply mask. Images go from 0-1. So to properly mask, need
-        % to recenter around zero, modulate with mask, then back to 0-1.
-        blurred = blurred - 0.5;
-        blurred_b = blurred_b - 0.5;
-        blurred = blurred .* mask;
-        blurred_b = blurred_b .* mask;
-        blurred = blurred + 0.5;
-        blurred_b = blurred_b + 0.5;
-
+        blurred =apply_mask(blurred,mask);
+        blurred_b =apply_mask(blurred_b,mask);
         blurred = blurred .^ (1/gamma_exponent);
         blurred_b = blurred_b .^ (1/gamma_exponent);
 
         % Make suitable for 8bit:
         blurred = blurred * 255;
         blurred_b = blurred_b * 255;
-        
-        %summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
