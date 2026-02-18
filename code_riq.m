@@ -14,6 +14,12 @@ num_images = size(targets,1);
 %image_order=image_order( randperm(num_trials) );
 image_order = randsample(1:num_images, num_trials,true);
 
+display_pixels = floor( stimulus_size_deg*60 / arcmin_per_pixel );
+%display_pixels = imsize(1);
+texture_width=display_pixels;
+texture_height=display_pixels;
+imsize=[display_pixels,display_pixels];
+
 % Read first one to init mask buffer etc. TODO: don't need. Can use imsize
 % since they are all rescaled.
 target1=targets(image_order(1));
@@ -82,14 +88,10 @@ try
 
     % Preparing and displaying the welcome screen
     % We choose a text size of 24 pixels - Well readable on most screens:
-    Screen('TextSize', expWin, 48);
+    % Screen('TextSize', expWin, 48);
 
     [x,y] = WindowCenter(expWin);
-    %display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-    display_pixels = imsize(1);
-    texture_width=display_pixels;
-    texture_height=display_pixels;
-    
+
     mask = make_mask(texture_width,0.4,8);
     
     posx=[x-texture_width/2*1.1, x+texture_width/2*1.1, x-texture_width/2*1.1, x+texture_width/2*1.1];
@@ -141,6 +143,8 @@ try
 
         blurred1 =apply_mask(blurred1,mask);
         blurred2 =apply_mask(blurred2,mask);
+        blurred1 = blurred1 .^ (1/gamma_exponent);
+        blurred2 = blurred2 .^ (1/gamma_exponent);
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
@@ -157,7 +161,6 @@ try
         noise1=Screen('MakeTexture', expWin, noise_pix1*255);
         noise_pix2=generate_2d_pink_noise(512,512,2);
         noise2=Screen('MakeTexture', expWin, noise_pix2*255);
-
 
         if duration_flips>0
             for flip_count=1:duration_flips

@@ -19,8 +19,8 @@ num_repeats=2;
 % Monitor & setup information
 distance_cm=400;
 monitor_horiz_size_cm=52.3;   % For HP VH240a in 2308D
-monitor_horiz_num_pixels=19920; % For HP VH240a in 2308D
-stimulus_size_deg=4.0;
+monitor_horiz_num_pixels=1920; % For HP VH240a in 2308D
+stimulus_size_deg=2.0;
 one_pixel_cm=monitor_horiz_size_cm/monitor_horiz_num_pixels
 arcmin_per_pixel = atan( one_pixel_cm/distance_cm ) / pi * 180 * 60
 
@@ -92,7 +92,6 @@ background = background * 255;
 %filename_mask='*.jpg';
 targets_dir='natural';
 filename_mask='*.png';
-imsize=[512,512];
 
 show_pf=0;
 
