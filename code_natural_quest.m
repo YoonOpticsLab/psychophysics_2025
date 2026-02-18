@@ -22,7 +22,7 @@ img1 = im2double(im2gray(img1)); % Convert to grayscale and double % Make b&w
 siz=size(img1,1)/4;
 
 %Prepare output
-colHeaders = {'trial_num', 'file','blur_sigma','correct','target_quad','resp','rt'};
+colHeaders = {'trial_num', 'file','blur_sigma','correct','resp','target_category','target_file','rt'};
 results=NaN * ones(length(trial_order),length(colHeaders)); %preallocate results matrix
 
 if (visualize_psf)
@@ -31,7 +31,7 @@ if (visualize_psf)
     return;
 end
 
-trycd 
+try 
     % Enable unified mode of KbName, so KbName accepts identical key names on
     % all operating systems (not absolutely necessary, but good practice):
     KbName('UnifyKeyNames');
@@ -94,30 +94,13 @@ trycd
     q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma,grain,range);
     %q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
 
-    display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
-	%display_pixels = imsize(1);
+    display_pixels = floor( stimulus_size_deg*60 / arcmin_per_pixel );
+    imsize = [display_pixels, display_pixels];
     texture_width=display_pixels;
     texture_height=display_pixels;
 
-    %% Make a circular Gaussian mask for the image.
-    %mask parameters
-    maskRadius = texture_width/2;
-    maskSigma = maskRadius;
-    % smoothing method: cosine (0), smoothstep (1), inverse smoothstep (2)
-    maskMethod = 0;
-    %[masktex, maskrect] = CreateProceduralSmoothedDisc(expWin,...
-    %    texture_width, texture_height, [], maskRadius, maskSigma, useAlpha, maskMethod);
-    X=linspace(-1,1,texture_width);
-    Y=linspace(-1,1,texture_width);
-    [XX,YY]=meshgrid(X,Y);
-    RR=sqrt(XX.^2+YY.^2);
-    %RR(RR>1)=1.0; % clip round edges
-    
-    sigma2 = 0.4;
-    mask_good=exp( -( (RR/2/sigma2).^8) ) ;
-    mask = mask_good / max(max(mask_good));
-    %mask=RR*0+1;
-%%
+    mask = make_mask(texture_width,0.45,8);
+
     for ntrial=1:num_trials
         which_quad = floor(rand(1)*4)+1; % TODO: make counterbalanced
 
@@ -130,7 +113,7 @@ trycd
 
 	    % We are free to test any intensity we like, not necessarily what Quest suggested.
 	    % 	tTest=min(-0.05,max(-3,tTest)); % Restrict to range of log contrasts that our equipment can produce.
-        z4_delta_D = tTest;       
+        z4_delta_D = 10^-tTest;
         
         which_image = image_order(ntrial);
 
@@ -146,49 +129,26 @@ trycd
             img1 = img1 / max(max(img1));
         end
 
-        % Target
         z4_um = -(z4_delta_D + z4_baseline_D) / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-        psf=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
-        blurred = conv2(img1,psf,'same');
+        psf2=defocus_psf(psf_pixels,z4_um,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
+        blurred = conv2(img1,psf2,'same');
         blurred = blurred - min(min(blurred));
         blurred = blurred / max(max(blurred));
 
-        % 3 non-targets
-        z4_um_b = -z4_baseline_D / 4 / sqrt(3) * (pupil_zernike_mm/2)^2
-        psf_b=defocus_psf(psf_pixels,z4_um_b,z12_baseline_um,arcmin_per_pixel,pupil_mm,pupil_zernike_mm,pupil_real_mm,visualize_psf,psf_normalize_area);
-        blurred_b = conv2(img1,psf_b,'same');
-        blurred_b = blurred_b - min(min(blurred_b));
-        blurred_b = blurred_b / max(max(blurred_b));
-
-        % Apply mask. Images go from 0-1. So to properly mask, need
-        % to recenter around zero, modulate with mask, then back to 0-1.
-        blurred = blurred - 0.5;
-        blurred_b = blurred_b - 0.5;
-        blurred = blurred .* mask;
-        blurred_b = blurred_b .* mask;
-        blurred = blurred + 0.5;
-        blurred_b = blurred_b + 0.5;
-
-        blurred = blurred .^ (1/gamma_exponent);
-        blurred_b = blurred_b .^ (1/gamma_exponent);
-
-        % Make suitable for 8bit:
+        blurred = apply_mask(blurred,mask);
+        blurred = blurred .^ (1/gamma_exponent);        
         blurred = blurred * 255;
-        blurred_b = blurred_b * 255;
-        
-        %summed = (img1.*(1-mask_entire) + blurred .* (mask_entire) ) / 2.0;
 
         Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
         Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
         Screen('Flip', expWin);
-        %KbWait([], 2); %wait for keystroke
+
         keyIsDown=0;
         while (keyIsDown==0)
             [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
         end
 
-        imageTextureT = Screen('MakeTexture', expWin, blurred);
-        imageTexture  = Screen('MakeTexture', expWin, blurred_b);
+        tex1 = Screen('MakeTexture', expWin, blurred);
 
         [x,y] = WindowCenter(expWin);
         display_pixels = stimulus_size_deg*60 / arcmin_per_pixel;
@@ -200,49 +160,16 @@ trycd
 
         flips_remaining=duration_flips;
         done=0;
+
+        secs_stim_on=tic;
         if duration_flips>0
-             KbReleaseWait(); % Clear buffer
-             % Just to get the correct time for secs_stim_on:
-            [keyIsDown, secs_stim_on, keyCode, deltaSecs] = KbCheck();
-            while ( (flips_remaining>0) && (done==0) )
-                for nquad=1:4
-                    if nquad==which_quad
-                        tex1=imageTextureT;
-                    else
-                        tex1=imageTexture;
-                    end
-                    x_pos=posx(nquad);
-                    y_pos=posy(nquad);
-                    dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
-                    Screen('DrawTexture', expWin, tex1, [], dstRect);
-                    %Screen('DrawTextures', expWin, masktex, [], dstRect, [], [], 1, [0, 0, 0, 1]', [], []);                    
-                end
-
-                [keyIsDown, secs_response, keyCode, deltaSecs] = KbCheck();
-                if (keyIsDown)
-                    done=1;
-                end
-
-                Screen('drawline',expWin,[0 0 0],mx-fix_size,my,mx+fix_size,my,2);
-                Screen('drawline',expWin,[0 0 0],mx,my-fix_size,mx,my+fix_size,2);
-                Screen('Flip', expWin);
-
-                flips_remaining = flips_remaining - 1;
-            end % while
-        else
-            for nquad=1:4
-                if nquad==which_quad
-                    tex1=imageTextureT;
-                else
-                    tex1=imageTexture;
-                end
-                x_pos=posx(nquad);
-                y_pos=posy(nquad);
+            for flip_count=1:duration_flips
+                x_pos=x;
+                y_pos=y;
                 dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
                 Screen('DrawTexture', expWin, tex1, [], dstRect);
+                Screen('Flip', expWin);
             end
-            Screen('Flip', expWin);
-            KbWait([], 2); %wait for keystroke
         end
 
         if save_image_snapshots
@@ -264,38 +191,51 @@ trycd
                 done=1;
             end
         end
-        Screen('drawline',expWin,[255 255 255],mx-fix_size,my,mx+fix_size,my,2);
-        Screen('drawline',expWin,[255 255 255],mx,my-fix_size,mx,my+fix_size,2);        
-        Screen('Flip', expWin);
 
         rt=secs_response-secs_stim_on;
 
         %find out which key was pressed
         cc=KbName(keyCode);  %translate code into letter (string)
 
-        resp_quad=0;
+        resp=0;
+
+        % Category will be two chars in from last slash in filename
+        idxs=strfind(target1.folder,'\'); % find all slashes
+        which_category = target1.folder(idxs(end)+2);
+
         if isempty(cc) || strcmp(cc,'ESCAPE')
             break;   %break out of trials loop, but perform all the cleanup things
-        elseif strcmp(cc,'7') || strcmp(cc,'q')
-            resp_quad = 1;
-        elseif strcmp(cc,'9') || strcmp(cc,'e')
-            resp_quad = 2;
-        elseif strcmp(cc,'1') || strcmp(cc,'z')
-            resp_quad = 3;
-        elseif strcmp(cc,'3') || strcmp(cc,'c')
-            resp_quad = 4;
+        elseif strcmp( cc, which_category ) % Does it match? strcmp is opposite from C
+            correct=1;
+        else
+            correct=0;
         end
 
-        correct=(resp_quad==which_quad);
+        if correct
+            colr=[0 255 0];
+        else
+            colr=[255 0 0];
+        end
+
+        %disp( [cc, which_category] )
+
+        Screen('drawline',expWin,colr,mx-fix_size,my,mx+fix_size,my,2);
+        Screen('drawline',expWin,colr,mx,my-fix_size,mx,my+fix_size,2);        
+        Screen('Flip', expWin);
 
         q=QuestUpdate(q,tTest,correct); % Add the new datum (actual test intensity and observer response) to the database.
 
-        results(ntrial,:)=[ntrial,z4_baseline_D ,z4_delta_D+z4_baseline_D,correct,which_quad,resp_quad,rt];
-        results(ntrial,:)
+        % Turn the image # into a float.  'n01820546_19716.JPEG'
+        firstnum = str2num( target1.name( [2:strfind(target1.name,'_')-1]) );
+        secondnum = str2num( target1.name( [strfind(target1.name,'_')+1:strfind(target1.name,'.')-1]) );
+        target_num = secondnum; % Just use image # for now... Might collide based on category, but oh well, take a chance
+
+        results(ntrial,:)=[ntrial,z4_baseline_D ,z4_delta_D+z4_baseline_D,correct,resp,which_category,target_num,rt];
+        results(ntrial,2) = tTest; % Seem to nee this to get a decimal into the array (WTF!?)
     end
     
     n_unique=0;
-    output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
+    output_filename = sprintf('results/natural-%s_%02d.csv',output_name,n_unique);
     while isfile( output_filename)
         n_unique = n_unique + 1;
         output_filename = sprintf('results/%s_%02d.csv',output_name,n_unique);
