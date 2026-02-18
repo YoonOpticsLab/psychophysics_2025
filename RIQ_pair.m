@@ -1,7 +1,9 @@
 close all; clear all;
 
 % Call with interpolation factor (default 10x if not specified)
-pairs = find_peak_pairs('RIQ_data_origin.csv', 5, 3);
+% Second # below is which row to use (which metric from GY's file)
+% 1=defocus, 2=MTF, 3=cross corr
+pairs = find_peak_pairs('RIQ_data_origin.csv', 5, 2);
 
 save('RIQ_pairs','pairs')
 
@@ -13,6 +15,7 @@ function [pairs] = find_peak_pairs(filename, interp_factor,which_row)
 %   interp_factor - (optional) interpolation factor to increase resolution
 %                   Default is 10 (creates 10x more points)
 %                   Use 1 for no interpolation
+%   which row - which metric to use row in CSV
 %
 % Output:
 %   pairs - structure array with fields:
