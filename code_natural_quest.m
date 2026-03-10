@@ -113,7 +113,10 @@ try
 
 	    % We are free to test any intensity we like, not necessarily what Quest suggested.
 	    % 	tTest=min(-0.05,max(-3,tTest)); % Restrict to range of log contrasts that our equipment can produce.
-        z4_delta_D = 10^-tTest;
+
+        % QUEST goes from 0 (best) -> 3 (worst)
+        % Our D goes from 3 (best) -> 0 (worst)
+        z4_delta_D = tMax-tTest;
         
         which_image = image_order(ntrial);
 
@@ -256,12 +259,14 @@ try
 
     if show_pf
         final_delta = QuestQuantile(q);
-        final_D = (final_delta + z4_baseline_D);
+        final_D =  tMax - (final_delta + z4_baseline_D); % This is what was reported first: 3/5/2026
+        %final_D =  tMax - final_delta; % This is final threshold INCREMENT (above baseline)
+        %final_D = (tMax - final_delta) + z4_baseline_D; % SHOULD BE THIS (IF we want absolute values, no deltas)
         delta = (final_D - z4_baseline_D );
         final_report = ["Baseline defocus (D): "+num2str(z4_baseline_D), "Baseline spherical (um): "+num2str(z12_baseline_um), "Final Threshold: "+num2str(final_D) ]
-        plot( results(:,3), 'o-' );
+        plot( tMax-results(:,2), 'o-' );
         title(final_report);
-        yl = yline(final_D,'--',"Threshold="+final_D,'LineWidth',3);
+        yl = yline(tMax-final_D,'--',"Threshold="+final_D,'LineWidth',3);
         ylabel( "Defocus (D)")
         xlabel( "Trial number")
     end
