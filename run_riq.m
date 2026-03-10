@@ -1,10 +1,10 @@
 close('all'); clear('all');
 
-% run_riq uses a "pair file" that is pre-generated based on the desired metric 
+% run_riq uses a "pair file" that is pre-generated based on75 the desired metric 
 % functions. To rebuild this,
 
-% First run RIQ_pair.m, which reads in the .csv from GY, and determines which
-% pairs to test. In line 4, the second parameter is the interpolation factor (how
+% First run RIQ_pair.m, which reads in the .csv from GY, and
+% determines which pairs to test. In line 4, the second parameter is the interpolation factor (how
 % many points to interpolate between each source data point), and the third
 % parameter is which metric to use from the original CSV.
 
@@ -15,6 +15,8 @@ psf_pixels=128;
 visualize_psf=0 ;   % For debugging
 psf_normalize_area=1; % Want this normalization. 2026/2/4
 num_repeats=2;
+
+save_image_snapshots=0;
 
 % Monitor & setup information
 distance_cm=400;
@@ -40,7 +42,7 @@ z12_baseline_um=str2double( cell2mat(answer(3)) );
 currentTime = datetime('now');
 
 % Define a filename-safe format (YYYY-MM-DD_HH-MM-SS)
-% Underscores or hyphens are generally safe and readable
+% Underscores or hyphens are generally safe and readable99
 formatSpec = 'yyyy-MM-dd_HH-mm';
 
 % Convert the datetime object to a st15ring using the specified format
@@ -57,7 +59,7 @@ noise_duration = 0.5;
 %blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 load("RIQ_pairs.mat")
 
-% THIS IS COMMENT. PUT CURSOR HERE TO AVOID PROBLEMS
+% THIS IS COMMENT. PUT CURSOR HERE TO AVOID PROBLEMS1119
 
 
 
