@@ -27,7 +27,7 @@ dlg_title='Experiment settings';
 answer=inputdlg(prompt,dlg_title,dlg_num_lines,dlg_defaults);
 
 z4_baseline_D=str2double( cell2mat(answer(2)) );
-z12_baseline_um=str2double( cell2mat(answer(3)) );
+z12_baseline_um=str2double( cell2mat(answer(3)) );3
 
 % Get current datetime object
 currentTime = datetime('now');
@@ -43,9 +43,7 @@ output_name=[cell2mat(answer(1)) '-z4_' num2str(z4_baseline_D) '-z12_' num2str(z
 %output_name=cell2mat(answer(2))+'-z4_'+z4_baseline_D+'-z12_'+z12_baseline_um+'-'+convertStringsToChars(dateTimeStr);
 
 % Stimulus
-stimulus_duration = 0.5; % In seconds
-
-
+stimulus_duration = 0.5; % In seconds5
 %blur_levels_multiplier=[10^-0.1,10^0.1];
 blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 
@@ -54,15 +52,15 @@ blur_levels_multiplier=[1.0]; % This is not really  used for Quest
 num_repeats=40; % For quest, this is number of trials in Quest
 
 % QUEST params:
-pThreshold=0.82;
+pThreshold=0.625; %0.82;
 beta=3.5;delta=0.01;gamma=0.25; % 4 choices, gamma=1/4
 % We know from piloting around 1.5X is good (for 0.5D baseline):
 tGuess = 0.5; % TODO: Where is the best place to start the staircase?
 tGuessSd = 3.0;
 
-% Define stimulus range (NOT log units)
-tMin = -0.5;  % Minimum allowed intensity
-tMax = 1;   % Maximum allowed intensity
+% Define stimulus range (NOT log units)1
+tMin = 0.0;  % Minimum allowed intensity
+tMax = 2.5;   % Maximum allo3wed intensity
 grain = 0.01;   % Step size in log units
 range=4; 
 
@@ -78,16 +76,17 @@ gamma_exponent=2.2;
 background=[background_level^(1/gamma_exponent),background_level^(1/gamma_exponent),background_level^(1/gamma_exponent)];
 background = background * 255;
 
-% Directory to randomly pull images from. All images are resized to the
-% size given. (May distort if not square.)
+% Directory to randomly pull images from. All images are resized to
+% the917731711193933193331
+% size given. (May distort31 if not square.)
 %targets_dir='face_images';
 %filename_mask='*.jpg';
-targets_dir='natural_category';
-filename_mask='*/*.JPEG';
+targets_dir='natural_category_revised_orig';
+filename_mask='0*/*.JPEG';
 imsize=[512,512];
 
 show_pf=1;
 
-% RUN
+% RUN 
 which_experiment='natural';
 run_experiment;
