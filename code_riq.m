@@ -170,6 +170,18 @@ try
                 Screen('DrawTexture', expWin, tex1, [], dstRect);
                 Screen('Flip', expWin);
             end
+
+            if save_image_snapshots
+                Screen('DrawTexture', expWin, tex1, [], dstRect);
+                Screen('Flip', expWin);
+    
+                currentTime = datetime('now');
+                formatSpec = 'yyyy-MM-dd_HH-mm-ss';
+                dateTimeStr = string(currentTime, formatSpec);
+                output_name=['screenshots/riq-screenshot-' convertStringsToChars(dateTimeStr) '.png'];
+                imageScreen = Screen('GetImage', expWin);
+                imwrite(imageScreen,output_name)
+            end
         end
         if duration_flips_noise>0
             for flip_count=1:duration_flips_noise
@@ -189,6 +201,18 @@ try
                 Screen('DrawTexture', expWin, tex2, [], dstRect);
                 Screen('Flip', expWin);
             end
+
+            if save_image_snapshots
+                Screen('DrawTexture', expWin, tex2, [], dstRect);
+                Screen('Flip', expWin);
+    
+                currentTime = datetime('now');
+                formatSpec = 'yyyy-MM-dd_HH-mm-ss';
+                dateTimeStr = string(currentTime, formatSpec);
+                output_name=['screenshots/riq-screenshot-' convertStringsToChars(dateTimeStr) '.png'];
+                imageScreen = Screen('GetImage', expWin);
+                imwrite(imageScreen,output_name)
+            end
         end
         if duration_flips_noise>0
             for flip_count=1:duration_flips_noise
@@ -197,6 +221,18 @@ try
                 dstRect = [x_pos - texture_width/2, y_pos - texture_height/2, x_pos + texture_width/2, y_pos + texture_height/2]; 
                 Screen('DrawTexture', expWin, noise2, [], dstRect);
                 Screen('Flip', expWin);
+            end
+
+            if save_image_snapshots
+                Screen('DrawTexture', expWin, noise2, [], dstRect);
+                Screen('Flip', expWin);
+    
+                currentTime = datetime('now');
+                formatSpec = 'yyyy-MM-dd_HH-mm-ss';
+                dateTimeStr = string(currentTime, formatSpec);
+                output_name=['screenshots/riq-screenshot-noise-' convertStringsToChars(dateTimeStr) '.png'];
+                imageScreen = Screen('GetImage', expWin);
+                imwrite(imageScreen,output_name)
             end
         end                    
 
